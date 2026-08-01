@@ -275,6 +275,99 @@
       color: rgba(235, 228, 214, 0.28);
     }
 
+    footer .credit {
+      margin-top: 0.7rem;
+      letter-spacing: 0.08em;
+      font-size: 0.68rem;
+      color: rgba(235, 228, 214, 0.22);
+    }
+
+    footer .credit a {
+      color: rgba(235, 228, 214, 0.35);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(235, 228, 214, 0.15);
+    }
+
+    /* —— Music —— */
+    .music-btn {
+      position: fixed;
+      right: 1.1rem;
+      bottom: 1.3rem;
+      z-index: 20;
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      border: 1px solid rgba(235, 228, 214, 0.28);
+      background: rgba(26, 22, 18, 0.72);
+      color: var(--paper-deep);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+      transition: border-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .music-btn:hover {
+      border-color: rgba(235, 228, 214, 0.55);
+      color: var(--paper);
+      transform: scale(1.04);
+    }
+
+    .music-btn svg {
+      width: 1.15rem;
+      height: 1.15rem;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .music-btn .icon-off { display: none; }
+    .music-btn.is-off .icon-on { display: none; }
+    .music-btn.is-off .icon-off { display: block; }
+
+    .music-btn.is-playing::after {
+      content: "";
+      position: absolute;
+      inset: -4px;
+      border-radius: 50%;
+      border: 1px solid rgba(139, 46, 46, 0.35);
+      animation: musicRing 2.4s ease-out infinite;
+    }
+
+    .music-tip {
+      position: fixed;
+      right: 4.4rem;
+      bottom: 1.7rem;
+      z-index: 20;
+      font-size: 0.78rem;
+      letter-spacing: 0.18em;
+      color: rgba(235, 228, 214, 0.55);
+      background: rgba(26, 22, 18, 0.65);
+      border: 1px solid rgba(235, 228, 214, 0.12);
+      padding: 0.45rem 0.75rem;
+      border-radius: 2px;
+      backdrop-filter: blur(8px);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(8px);
+      transition: opacity 0.45s ease, transform 0.45s ease;
+      white-space: nowrap;
+    }
+
+    .music-tip.show {
+      opacity: 1;
+      transform: none;
+    }
+
+    @keyframes musicRing {
+      0% { opacity: 0.7; transform: scale(0.92); }
+      100% { opacity: 0; transform: scale(1.18); }
+    }
+
     @keyframes rise {
       from { opacity: 0; transform: translateY(22px); }
       to { opacity: 1; transform: none; }
@@ -423,8 +516,32 @@
       </div>
     </article>
 
-    <footer>贪欢 · 剧本杀售后</footer>
+    <footer>
+      贪欢 · 剧本杀售后
+      <div class="credit">
+        背景音乐 ·
+        <a href="https://www.jamendo.com/" target="_blank" rel="noopener">MemoryMusic — Ethereal Xiao Flute</a>
+        （CC BY-NC-ND）
+      </div>
+    </footer>
   </div>
+
+  <button class="music-btn is-off" id="musicBtn" type="button" aria-label="播放背景音乐" title="音乐">
+    <svg class="icon-on" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9 18V6l10-2v12" />
+      <circle cx="7" cy="18" r="2.4" />
+      <circle cx="17" cy="16" r="2.4" />
+    </svg>
+    <svg class="icon-off" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M9 18V6l10-2v12" />
+      <circle cx="7" cy="18" r="2.4" />
+      <circle cx="17" cy="16" r="2.4" />
+      <path d="M4 5l16 14" />
+    </svg>
+  </button>
+  <div class="music-tip" id="musicTip">轻触开启音乐</div>
+
+  <audio id="bgm" loop preload="auto" src="music/bgm.mp3"></audio>
 
   <script>
     const io = new IntersectionObserver(
@@ -441,13 +558,57 @@
 
     document.querySelectorAll(".prose p, .reveal").forEach((el) => io.observe(el));
 
-    // Ensure season images always reveal even if observer misses
     document.querySelectorAll(".season-art").forEach((fig) => {
       const img = fig.querySelector("img");
       const show = () => fig.classList.add("visible");
       if (img && img.complete && img.naturalWidth) show();
       else if (img) img.addEventListener("load", show, { once: true });
     });
+
+    const audio = document.getElementById("bgm");
+    const musicBtn = document.getElementById("musicBtn");
+    const musicTip = document.getElementById("musicTip");
+    audio.volume = 0.38;
+
+    const setPlayingUI = (playing) => {
+      musicBtn.classList.toggle("is-playing", playing);
+      musicBtn.classList.toggle("is-off", !playing);
+      musicBtn.setAttribute("aria-label", playing ? "关闭背景音乐" : "播放背景音乐");
+    };
+
+    const playMusic = async () => {
+      try {
+        await audio.play();
+        setPlayingUI(true);
+        localStorage.setItem("wuning-bgm", "on");
+        musicTip.classList.remove("show");
+      } catch (_) {
+        setPlayingUI(false);
+        musicTip.classList.add("show");
+      }
+    };
+
+    const pauseMusic = () => {
+      audio.pause();
+      setPlayingUI(false);
+      localStorage.setItem("wuning-bgm", "off");
+    };
+
+    musicBtn.addEventListener("click", () => {
+      if (audio.paused) playMusic();
+      else pauseMusic();
+    });
+
+    // Soft invite; browsers block autoplay with sound
+    setTimeout(() => {
+      if (audio.paused) musicTip.classList.add("show");
+    }, 1600);
+
+    setTimeout(() => musicTip.classList.remove("show"), 6500);
+
+    if (localStorage.getItem("wuning-bgm") === "on") {
+      playMusic();
+    }
   </script>
 </body>
 </html>
