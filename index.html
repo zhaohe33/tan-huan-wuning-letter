@@ -114,13 +114,68 @@
       animation: rise 1.2s ease 1.4s forwards;
     }
 
+    .hero-music {
+      margin-top: 2rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.7rem 1.25rem 0.7rem 1rem;
+      border: 1px solid rgba(235, 228, 214, 0.32);
+      background: rgba(235, 228, 214, 0.04);
+      color: var(--paper-deep);
+      cursor: pointer;
+      font-family: "Noto Serif SC", "Songti SC", serif;
+      font-size: 0.88rem;
+      letter-spacing: 0.28em;
+      border-radius: 999px;
+      transition: border-color 0.35s ease, color 0.35s ease, background 0.35s ease, box-shadow 0.35s ease;
+      opacity: 0;
+      animation: rise 1.2s ease 1.7s forwards;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .hero-music:hover {
+      border-color: rgba(235, 228, 214, 0.6);
+      color: var(--paper);
+      background: rgba(235, 228, 214, 0.08);
+    }
+
+    .hero-music-icon {
+      position: relative;
+      width: 1.2rem;
+      height: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    .hero-music-icon svg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .hero-music .icon-off { display: none; }
+    .hero-music.is-off .icon-on { display: none; }
+    .hero-music.is-off .icon-off { display: block; }
+
+    .hero-music.is-playing {
+      border-color: rgba(139, 46, 46, 0.55);
+      box-shadow: 0 0 0 1px rgba(139, 46, 46, 0.18);
+      color: var(--paper);
+    }
+
     .scroll-hint {
-      margin-top: 3.5rem;
+      margin-top: 2.8rem;
       font-size: 0.75rem;
       letter-spacing: 0.35em;
       color: rgba(235, 228, 214, 0.35);
       opacity: 0;
-      animation: pulseHint 2.4s ease 2s infinite;
+      animation: pulseHint 2.4s ease 2.2s infinite;
     }
 
     /* —— Letter —— */
@@ -401,6 +456,22 @@
         不及牵君一寸衷。
       </p>
       <p class="hero-note">这是我从前为你写下的诗。</p>
+      <button class="hero-music is-off" id="heroMusicBtn" type="button" aria-label="播放背景音乐">
+        <span class="hero-music-icon" aria-hidden="true">
+          <svg class="icon-on" viewBox="0 0 24 24">
+            <path d="M9 18V6l10-2v12" />
+            <circle cx="7" cy="18" r="2.4" />
+            <circle cx="17" cy="16" r="2.4" />
+          </svg>
+          <svg class="icon-off" viewBox="0 0 24 24">
+            <path d="M9 18V6l10-2v12" />
+            <circle cx="7" cy="18" r="2.4" />
+            <circle cx="17" cy="16" r="2.4" />
+            <path d="M4 5l16 14" />
+          </svg>
+        </span>
+        <span class="hero-music-label" data-play="开启音乐" data-pause="暂停音乐">开启音乐</span>
+      </button>
       <p class="scroll-hint">下滑阅读</p>
     </header>
 
@@ -567,13 +638,20 @@
 
     const audio = document.getElementById("bgm");
     const musicBtn = document.getElementById("musicBtn");
+    const heroMusicBtn = document.getElementById("heroMusicBtn");
     const musicTip = document.getElementById("musicTip");
+    const heroLabel = heroMusicBtn.querySelector(".hero-music-label");
     audio.volume = 0.38;
 
     const setPlayingUI = (playing) => {
-      musicBtn.classList.toggle("is-playing", playing);
-      musicBtn.classList.toggle("is-off", !playing);
-      musicBtn.setAttribute("aria-label", playing ? "关闭背景音乐" : "播放背景音乐");
+      [musicBtn, heroMusicBtn].forEach((btn) => {
+        btn.classList.toggle("is-playing", playing);
+        btn.classList.toggle("is-off", !playing);
+        btn.setAttribute("aria-label", playing ? "关闭背景音乐" : "播放背景音乐");
+      });
+      heroLabel.textContent = playing
+        ? heroLabel.dataset.pause
+        : heroLabel.dataset.play;
     };
 
     const playMusic = async () => {
@@ -594,12 +672,14 @@
       localStorage.setItem("wuning-bgm", "off");
     };
 
-    musicBtn.addEventListener("click", () => {
+    const toggleMusic = () => {
       if (audio.paused) playMusic();
       else pauseMusic();
-    });
+    };
 
-    // Soft invite; browsers block autoplay with sound
+    musicBtn.addEventListener("click", toggleMusic);
+    heroMusicBtn.addEventListener("click", toggleMusic);
+
     setTimeout(() => {
       if (audio.paused) musicTip.classList.add("show");
     }, 1600);
