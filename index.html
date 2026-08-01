@@ -194,6 +194,7 @@
       opacity: 0;
       transform: translateY(24px) scale(0.985);
       transition: opacity 1.1s ease, transform 1.1s ease;
+      min-height: 1px;
     }
 
     .season-art.visible {
@@ -204,7 +205,10 @@
     .season-art img {
       width: 100%;
       height: auto;
+      aspect-ratio: 3 / 4;
+      object-fit: cover;
       display: block;
+      background: #2a241c;
       border-radius: 2px;
       box-shadow:
         0 0 0 1px rgba(235, 228, 214, 0.08),
@@ -336,7 +340,7 @@
           <p>我们便乘一叶小舟，顺水而下。去看杏花烟雨，去走青石小巷，去看春风吹开满城花枝。</p>
         </div>
         <figure class="season-art reveal">
-          <img src="images/spring.jpg" alt="春分戏蝶 · 水墨江南" loading="lazy" />
+          <img src="images/spring.jpg" alt="春分戏蝶 · 水墨江南" />
         </figure>
         <div class="prose">
           <p>那时的你不必再戴凤冠，也不必再守宫中的规矩。</p>
@@ -357,7 +361,7 @@
           <p>没有宫规，没有奏折，没有早朝，也没有人再来打扰我们。</p>
         </div>
         <figure class="season-art reveal">
-          <img src="images/summer.jpg" alt="夏归小院 · 水墨纳凉" loading="lazy" />
+          <img src="images/summer.jpg" alt="夏归小院 · 水墨纳凉" />
         </figure>
         <div class="prose">
           <p>你若困了，便靠在我肩上睡一会儿。</p>
@@ -377,7 +381,7 @@
           <p>你若觉得累了，我们就坐在田埂上歇一歇，看风吹过稻田，看沉甸甸的稻穗一层一层弯下腰。</p>
         </div>
         <figure class="season-art reveal">
-          <img src="images/autumn.jpg" alt="秋至云栖 · 水墨稻田" loading="lazy" />
+          <img src="images/autumn.jpg" alt="秋至云栖 · 水墨稻田" />
         </figure>
         <div class="prose">
           <p>或许衣裳会沾上泥，手上也会留下细小的伤口，可只要百姓不再挨饿，只要你坐在我的身旁，那便是这世上最好的秋天。</p>
@@ -398,7 +402,7 @@
           <p>若是我输了，我便再为你写一首诗。</p>
         </div>
         <figure class="season-art reveal">
-          <img src="images/winter.jpg" alt="冬围红炉 · 水墨煮茶" loading="lazy" />
+          <img src="images/winter.jpg" alt="冬围红炉 · 水墨煮茶" />
         </figure>
       </section>
 
@@ -432,10 +436,18 @@
           }
         });
       },
-      { threshold: 0.12, rootMargin: "0px 0px -6% 0px" }
+      { threshold: 0.01, rootMargin: "80px 0px 80px 0px" }
     );
 
     document.querySelectorAll(".prose p, .reveal").forEach((el) => io.observe(el));
+
+    // Ensure season images always reveal even if observer misses
+    document.querySelectorAll(".season-art").forEach((fig) => {
+      const img = fig.querySelector("img");
+      const show = () => fig.classList.add("visible");
+      if (img && img.complete && img.naturalWidth) show();
+      else if (img) img.addEventListener("load", show, { once: true });
+    });
   </script>
 </body>
 </html>
